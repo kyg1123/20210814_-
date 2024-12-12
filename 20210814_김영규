@@ -1,0 +1,196 @@
+import random
+import string
+
+BUCKETS = 10
+DIGITS = 4
+
+def generate_student_records():
+    students = []
+    for _ in range(30):
+        name = ''.join(random.choices(string.ascii_uppercase, k=2))
+        age = random.randint(18, 22)
+        score = random.randint(0, 100)
+        students.append((name, age, score))
+    return students
+
+def selection_sort(A, descending=False):
+    n = len(A)
+    for i in range(n - 1):
+        least = i
+        for j in range(i + 1, n):
+            if (A[j] < A[least]) != descending:
+                least = j
+        A[i], A[least] = A[least], A[i]
+    return A
+
+def insertion_sort(A, descending=False):
+    n = len(A)
+    for i in range(1, n):
+        key = A[i]
+        j = i - 1
+        while j >= 0 and (A[j] > key) != descending:
+            A[j + 1] = A[j]
+            j -= 1
+        A[j + 1] = key
+    return A
+
+def partition(A, left, right, descending):
+    pivot = A[right]
+    i = left - 1
+    for j in range(left, right):
+        if (A[j] <= pivot) != descending:
+            i += 1
+            A[i], A[j] = A[j], A[i]
+    A[i + 1], A[right] = A[right], A[i + 1]
+    return i + 1
+
+def quick_sort(A, left, right, descending=False):
+    if left < right:
+        q = partition(A, left, right, descending)
+        quick_sort(A, left, q - 1, descending)
+        quick_sort(A, q + 1, right, descending)
+    return A
+
+def counting_sort(A, exp, descending):
+    n = len(A)
+    output = [0] * n
+    count = [0] * 10
+
+    for i in range(n):
+        index = A[i] // exp
+        count[index % 10] += 1
+
+    if descending:
+        for i in range(8, -1, -1):
+            count[i] += count[i + 1]
+    else:
+        for i in range(1, 10):
+            count[i] += count[i - 1]
+
+    i = n - 1
+    while i >= 0:
+        index = A[i] // exp
+        output[count[index % 10] - 1] = A[i]
+        count[index % 10] -= 1
+        i -= 1
+
+    for i in range(n):
+        A[i] = output[i]
+
+def radix_sort(A, descending=False):
+    max_num = max(A)
+    exp = 1
+    while max_num // exp > 0:
+        counting_sort(A, exp, descending)
+        exp *= 10
+    return A
+
+def print_students(students):
+    print("\n생성된 학생 목록:")
+    print("이름\t나이\t성적")
+    print("-" * 30)
+    for student in students:
+        print(f"{student[0]}\t{student[1]}\t{student[2]}")
+        
+def print_sorted_students(students):
+    print("이름\t나이\t성적")
+    print("-" * 30)
+    for student in students:
+        print(f"{student[0]}\t{student[1]}\t{student[2]}")
+
+def sort_students(students, sort_keys, sort_func, descending):
+    if sort_func == radix_sort and sort_keys[-1] != 2:
+        print("기수 정렬은 성적에 대해서만 사용할 수 있습니다.")
+        return students
+    
+    def multi_key_compare(item):
+        return tuple(item[key] for key in sort_keys)
+    
+    return sorted(students, key=multi_key_compare, reverse=descending)
+
+def print_sort_info(sort_keys, algorithm, descending):
+    criteria = [["이름", "나이", "성적"][key] for key in sort_keys]
+    order = "내림차순" if descending else "오름차순"
+    print(f"\n정렬 정보")
+    print(f"정렬 기준: {' > '.join(criteria)}")
+    print(f"정렬 순서: {order}")
+    print(f"사용된 알고리즘: {algorithm}")
+    
+    descriptions = {
+        "선택 정렬": "가장 작은 숫자를 선택해 맨 앞으로 이동시키는 방식으로 동작합니다.",
+        "삽입 정렬": "각 숫자를 이미 정렬된 배열 부분과 비교하여 자신의 위치를 찾아 삽입합니다.",
+        "퀵 정렬": "피벗을 기준으로 작은 숫자와 큰 숫자로 분할하고 재귀적으로 정렬합니다.",
+        "기수 정렬": "각 자릿수를 기준으로 차례대로 정렬하여 전체를 정렬합니다."
+    }
+    print(f"알고리즘 설명: {descriptions[algorithm]}")
+
+def main():
+    students = generate_student_records()
+    sort_keys = []
+    
+    while True:
+        print_students(students)
+        
+        print("\n=== 성적 관리 프로그램 ===")
+        print("1. 이름을 기준으로 정렬")
+        print("2. 나이를 기준으로 정렬")
+        print("3. 성적을 기준으로 정렬")
+        print("4. 프로그램 종료")
+        
+        choice = input("\n메뉴를 선택하세요 (1-4): ")
+        
+        if choice == '4':
+            print("프로그램을 종료합니다.")
+            break
+            
+        if choice in ['1', '2', '3']:
+            print("\n정렬 알고리즘 선택:")
+            print("1. 선택 정렬")
+            print("2. 삽입 정렬")
+            print("3. 퀵 정렬")
+            if choice == '3':
+                print("4. 기수 정렬")
+            
+            sort_choice = input("정렬 알고리즘을 선택하세요: ")
+            
+            descending = input("정렬 순서를 선택하세요 (1: 오름차순, 2: 내림차순): ") == '2'
+            
+            key_index = int(choice) - 1
+            if key_index in sort_keys:
+                sort_keys.remove(key_index)
+            sort_keys.insert(0, key_index)
+            
+            if sort_choice == '1':
+                students = sort_students(students, sort_keys, lambda x: selection_sort(x, descending), descending)
+                algorithm = "선택 정렬"
+            elif sort_choice == '2':
+                students = sort_students(students, sort_keys, lambda x: insertion_sort(x, descending), descending)
+                algorithm = "삽입 정렬"
+            elif sort_choice == '3':
+                students = sort_students(students, sort_keys, lambda x: quick_sort(x, 0, len(x)-1, descending), descending)
+                algorithm = "퀵 정렬"
+            elif sort_choice == '4' and choice == '3':
+                students = sort_students(students, sort_keys, lambda x: radix_sort(x, descending), descending)
+                algorithm = "기수 정렬"
+            else:
+                print("잘못된 선택입니다.")
+                continue
+            
+            print_sort_info(sort_keys, algorithm, descending)
+            print("\n정렬 결과:")
+            print_sorted_students(students)
+            
+            while True:
+                continue_choice = input("\n메뉴로 돌아가시겠습니까? (Y/N): ").upper()
+                if continue_choice == 'Y':
+                    break
+                elif continue_choice == 'N':
+                    print("프로그램을 종료합니다.")
+                    return
+                else:
+                    print("잘못된 입력입니다. Y 또는 N을 입력해주세요.")
+        else:
+            print("잘못된 선택입니다.")
+
+if __name__ == "__main__":
+    main()
